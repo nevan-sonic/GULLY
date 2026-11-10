@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Bringing Web3 to Everyday Indian Shops - NEAR Hackathon 2026 Submission",
   "scripts": {
+    "start": "python -m http.server 3000 --directory frontend",
     "test": "node test_runner.js",
     "simulate": "python simulate_gully_rush.py"
   },
