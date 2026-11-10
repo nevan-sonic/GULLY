@@ -13,6 +13,10 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 > 🌐 **Live Interactive App**: [https://nevan-sonic.github.io/GULLY/](https://nevan-sonic.github.io/GULLY/)  
+> 🔗 **Live NEAR Testnet Contracts**:
+> - **GULLY Pass (NEP-171)**: [`pass.gully-protocol.testnet`](https://testnet.nearblocks.io/address/pass.gully-protocol.testnet)
+> - **GULLY Coin (NEP-141)**: [`coin.gully-protocol.testnet`](https://testnet.nearblocks.io/address/coin.gully-protocol.testnet)
+> - **Master Deployer**: [`gully-protocol.testnet`](https://testnet.nearblocks.io/address/gully-protocol.testnet)  
 > 📹 **Demo Video Script & X Post Kit**: [DEMO_AND_SUBMISSION.md](DEMO_AND_SUBMISSION.md)
 
 ---

@@ -16,6 +16,9 @@
 | **Selected Tracks** | Track 10: NFTs That Do Something (`nfts`), Track 11: Memecoins With Mechanics (`memecoins`) |
 | **GitHub Repository** | `https://github.com/nevan-sonic/GULLY` |
 | **Live Interactive Demo** | `https://nevan-sonic.github.io/GULLY/` |
+| **GULLY Pass (NEP-171)** | `pass.gully-protocol.testnet` ([NearBlocks Explorer](https://testnet.nearblocks.io/address/pass.gully-protocol.testnet)) |
+| **GULLY Coin (NEP-141)** | `coin.gully-protocol.testnet` ([NearBlocks Explorer](https://testnet.nearblocks.io/address/coin.gully-protocol.testnet)) |
+| **Deployer Account** | `gully-protocol.testnet` ([NearBlocks Explorer](https://testnet.nearblocks.io/address/gully-protocol.testnet)) |
 | **Tech Stack** | NEAR Protocol (Rust Smart Contracts), NEP-171, NEP-141, Python Simulation, Tailwind / JS Web Terminal |
 | **Key Standards** | NEP-171 (Dynamic NFT), NEP-141 (Fungible Token), NEP-145 (Storage), NEP-366 (Delegated / Relayed) |
 
