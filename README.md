@@ -6,9 +6,14 @@
 > - **Track 11 (id: `memecoins`)**: *Memecoins With Mechanics* — Community token powered by real local commerce with onchain "Gully Rush" milestones, immutable parameters, and 100% burn-on-redemption.
 
 [![NEAR Protocol](https://img.shields.io/badge/NEAR-Protocol-black?style=flat&logo=near)](https://near.org)
+[![CI Status](https://github.com/nevan-sonic/GULLY/actions/workflows/ci.yml/badge.svg)](https://github.com/nevan-sonic/GULLY/actions)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-brightgreen)](https://nevan-sonic.github.io/GULLY/)
 [![Track: NFTs](https://img.shields.io/badge/Track-NFTs_That_Do_Something-blue)](https://github.com/nearai/near-hackathon-prompt-examples/blob/main/tracks/10-nfts.md)
 [![Track: Memecoins](https://img.shields.io/badge/Track-Memecoins_With_Mechanics-yellow)](https://github.com/nearai/near-hackathon-prompt-examples/blob/main/tracks/11-memecoins.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+> 🌐 **Live Interactive App**: [https://nevan-sonic.github.io/GULLY/](https://nevan-sonic.github.io/GULLY/)  
+> 📹 **Demo Video Script & X Post Kit**: [DEMO_AND_SUBMISSION.md](DEMO_AND_SUBMISSION.md)
 
 ---
 
