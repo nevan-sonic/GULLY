@@ -1,0 +1,22 @@
+{
+  "name": "gully",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Bringing Web3 to Everyday Indian Shops - NEAR Hackathon 2026 Submission",
+  "scripts": {
+    "test": "node test_runner.js",
+    "simulate": "python simulate_gully_rush.py"
+  },
+  "keywords": [
+    "near",
+    "nep-171",
+    "nep-141",
+    "nfts-that-do-something",
+    "memecoins-with-mechanics",
+    "sub-accounts",
+    "loyalty",
+    "web3"
+  ],
+  "author": "nevan-sonic",
+  "license": "MIT"
+}
