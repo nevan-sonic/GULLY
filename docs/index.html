@@ -63,8 +63,12 @@
         </div>
       </div>
 
-      <!-- Mode Selector -->
+      <!-- Mode Selector & Mobile Connect -->
       <div class="flex items-center space-x-2">
+        <button onclick="openMobileConnectModal()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+          <span>Open on Phone</span>
+        </button>
         <div class="bg-slate-900 border border-slate-800 rounded-lg p-1 flex text-xs font-semibold">
           <button onclick="setRole('customer')" id="roleBtnCustomer" class="px-3.5 py-1.5 rounded-md transition-all bg-amber-500 text-slate-950 font-bold shadow">
             Customer Interface
@@ -136,16 +140,85 @@
       <div class="flex justify-between items-center">
         <div>
           <h3 class="font-display font-bold text-base text-white" id="scannerTitle">QR Scanner</h3>
-          <p class="text-xs text-slate-400">Position the QR code inside the camera viewfinder</p>
+          <p class="text-xs text-slate-400">Scan via camera or use 1-click laptop testing</p>
         </div>
         <button onclick="closeCameraScanner()" class="text-slate-400 hover:text-white px-2.5 py-1 rounded bg-slate-800 text-xs border border-slate-700">Close</button>
       </div>
       
-      <div id="cameraReader" class="w-full bg-slate-900 rounded-xl overflow-hidden aspect-square border border-slate-800"></div>
-      
-      <div class="text-center">
-        <span class="text-[11px] text-slate-500 font-mono">Compatible with standard webcams and mobile cameras</span>
+      <!-- Live Video Viewfinder -->
+      <div id="cameraReader" class="w-full bg-slate-900 rounded-xl overflow-hidden aspect-video border border-slate-800"></div>
+
+      <!-- Single Laptop Simulator Section -->
+      <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-2.5">
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-semibold text-amber-400 uppercase tracking-wider text-[10px] font-mono">Single-Laptop Test Mode</span>
+          <span class="text-[10px] text-slate-500">No Webcam Needed</span>
+        </div>
+        
+        <!-- Customer Quick Scan Options -->
+        <div id="customerQuickScanOptions" class="space-y-1.5 text-xs">
+          <p class="text-[11px] text-slate-400">Click to simulate scanning a physical shop standee:</p>
+          <div class="grid grid-cols-1 gap-1.5">
+            <button onclick="handleQrScanSuccess('gully://shop?id=ramesh_bakery&name=Ramesh%20Bakery'); closeCameraScanner();" class="text-left bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded border border-slate-700 text-xs transition flex justify-between items-center">
+              <span>Scan Ramesh Bakery Standee</span>
+              <span class="text-emerald-400 font-mono font-bold">+10 GULLY</span>
+            </button>
+            <button onclick="handleQrScanSuccess('gully://shop?id=kumar_saloon&name=Kumar%20Saloon'); closeCameraScanner();" class="text-left bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded border border-slate-700 text-xs transition flex justify-between items-center">
+              <span>Scan Kumar Saloon Standee</span>
+              <span class="text-emerald-400 font-mono font-bold">+10 GULLY</span>
+            </button>
+            <button onclick="handleQrScanSuccess('gully://shop?id=lakshmi_kirana&name=Lakshmi%20Kirana%20Store'); closeCameraScanner();" class="text-left bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded border border-slate-700 text-xs transition flex justify-between items-center">
+              <span>Scan Lakshmi Kirana Standee</span>
+              <span class="text-emerald-400 font-mono font-bold">+10 GULLY</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cashier Quick Scan Options -->
+        <div id="merchantQuickScanOptions" class="hidden space-y-1.5 text-xs">
+          <p class="text-[11px] text-slate-400">Click to simulate scanning customer voucher:</p>
+          <button onclick="handleQrScanSuccess('gully://voucher?cust=arun_shopper.testnet&coins=10&discount=15'); closeCameraScanner();" class="w-full text-left bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded border border-slate-700 text-xs transition flex justify-between items-center">
+            <span>Scan Arun's 10-Coin Voucher</span>
+            <span class="text-amber-400 font-mono font-bold">-₹15 Discount</span>
+          </button>
+        </div>
+
+        <!-- Manual String Entry -->
+        <div class="pt-2 border-t border-slate-800/80 flex space-x-1.5">
+          <input type="text" id="manualQrInput" placeholder="Paste gully:// payload" class="bg-slate-800 border border-slate-700 text-xs font-mono rounded px-2.5 py-1.5 flex-1 text-white outline-none focus:border-amber-500" />
+          <button onclick="if(document.getElementById('manualQrInput').value){ handleQrScanSuccess(document.getElementById('manualQrInput').value); closeCameraScanner(); }" class="bg-slate-700 hover:bg-slate-600 text-white text-xs px-3 py-1.5 rounded transition font-semibold">
+            Process
+          </button>
+        </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Mobile Connect Modal -->
+  <div id="mobileConnectModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+    <div class="glass-card rounded-2xl p-6 max-w-sm w-full border border-slate-700 space-y-4 text-center">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-mono text-amber-400 font-bold uppercase">Mobile Handshake</span>
+        <button onclick="document.getElementById('mobileConnectModal').classList.add('hidden')" class="text-slate-400 hover:text-white px-2 py-0.5 rounded bg-slate-800 text-xs border border-slate-700">Close</button>
+      </div>
+
+      <div>
+        <h3 class="text-base font-display font-bold text-white">Scan with Your Phone Camera</h3>
+        <p class="text-xs text-slate-400 mt-0.5">Open the real app on your mobile phone via local Wi-Fi.</p>
+      </div>
+
+      <div class="bg-white p-4 rounded-xl inline-block mx-auto">
+        <div id="mobileConnectQr" class="w-44 h-44 flex items-center justify-center mx-auto"></div>
+      </div>
+
+      <div class="space-y-1 text-xs font-mono text-slate-300">
+        <p class="text-amber-300 font-bold">http://10.149.188.132:3000</p>
+        <p class="text-[11px] text-slate-500">Ensure your phone is connected to the same Wi-Fi</p>
+      </div>
+
+      <button onclick="document.getElementById('mobileConnectModal').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2 rounded-lg transition border border-slate-700">
+        Dismiss
+      </button>
     </div>
   </div>
 
@@ -876,26 +949,48 @@
         ? 'Scan Counter Standee' 
         : 'Scan Customer Voucher';
 
+      if (role === 'customer') {
+        document.getElementById('customerQuickScanOptions').classList.remove('hidden');
+        document.getElementById('merchantQuickScanOptions').classList.add('hidden');
+      } else {
+        document.getElementById('customerQuickScanOptions').classList.add('hidden');
+        document.getElementById('merchantQuickScanOptions').classList.remove('hidden');
+      }
+
       if (html5QrScanner) {
+        try { html5QrScanner.stop(); } catch (e) {}
         html5QrScanner.clear();
       }
 
-      html5QrScanner = new Html5Qrcode("cameraReader");
-      html5QrScanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => {
-          handleQrScanSuccess(decodedText);
-          closeCameraScanner();
-        },
-        () => {}
-      ).catch(err => {
-        const manual = prompt('Camera permission unavailable. Enter QR payload manually for testing:', 
-          scannerRole === 'customer' ? 'gully://shop?id=ramesh_bakery&name=Ramesh%20Bakery' : 'gully://voucher?cust=arun_shopper.testnet&coins=10&discount=15');
-        if (manual) {
-          handleQrScanSuccess(manual);
-          closeCameraScanner();
-        }
+      try {
+        html5QrScanner = new Html5Qrcode("cameraReader");
+        html5QrScanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            handleQrScanSuccess(decodedText);
+            closeCameraScanner();
+          },
+          () => {}
+        ).catch(err => {
+          console.log('Webcam not active on this device; use 1-click simulator below', err);
+        });
+      } catch (e) {
+        console.log('Camera init skipped', e);
+      }
+    }
+
+    function openMobileConnectModal() {
+      document.getElementById('mobileConnectModal').classList.remove('hidden');
+      const box = document.getElementById('mobileConnectQr');
+      box.innerHTML = '';
+      new QRCode(box, {
+        text: 'http://10.149.188.132:3000',
+        width: 176,
+        height: 176,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
       });
     }
 
