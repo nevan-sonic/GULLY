@@ -2,647 +2,1130 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GULLY — Bringing Web3 to Everyday Indian Shops</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GULLY — Real-Time Neighborhood Commerce Network (NEAR Testnet)</title>
+  
+  <!-- Tailwind CSS & Fonts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Production Libraries: NEAR API, QR Code Generator & Real-Time Camera Scanner -->
+  <script src="https://cdn.jsdelivr.net/npm/near-api-js@4.0.4/dist/near-api-js.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
     .font-display { font-family: 'Space Grotesk', sans-serif; }
-    .glass-card { background: rgba(18, 24, 38, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .glow-amber { box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); }
-    .glow-emerald { box-shadow: 0 0 30px rgba(16, 185, 129, 0.2); }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glow-amber { box-shadow: 0 0 35px rgba(245, 158, 11, 0.25); }
+    .glow-emerald { box-shadow: 0 0 35px rgba(16, 185, 129, 0.25); }
+    .glow-blue { box-shadow: 0 0 35px rgba(59, 130, 246, 0.25); }
+    
+    /* Print Standee Styles */
+    @media print {
+      body * { visibility: hidden; }
+      #printableStandee, #printableStandee * { visibility: visible; }
+      #printableStandee { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
+    }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
 
-  <!-- Top Navigation -->
-  <header class="border-b border-slate-800/80 bg-slate-900/60 sticky top-0 z-50 backdrop-blur-md">
+  <!-- Real-Time NEAR Testnet Status Banner -->
+  <div class="bg-gradient-to-r from-amber-600/20 via-orange-600/20 to-amber-600/20 border-b border-amber-500/20 px-4 py-1.5 text-[11px] font-mono text-amber-300 flex items-center justify-between">
+    <div class="flex items-center space-x-2 max-w-6xl mx-auto w-full">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="font-bold">NEAR TESTNET LIVE:</span>
+      <span id="nearRpcStatus" class="text-slate-300">Connected to rpc.testnet.near.org</span>
+      <span class="hidden sm:inline text-slate-500">|</span>
+      <span class="hidden sm:inline text-slate-400">Contracts: <span class="text-amber-400 font-bold">pass.gully-protocol.testnet</span> · <span class="text-amber-400 font-bold">coin.gully-protocol.testnet</span></span>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-40 backdrop-blur-md">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Mode Switcher -->
       <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-600 flex items-center justify-center font-display font-bold text-slate-950 text-xl shadow-lg shadow-orange-500/20">
           G
         </div>
         <div>
           <div class="flex items-center space-x-2">
-            <span class="font-display font-bold text-xl tracking-tight text-white">GULLY</span>
-            <span class="text-[10px] font-semibold uppercase tracking-wider bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/20">NEAR Hackathon 2026</span>
+            <h1 class="font-display font-bold text-xl tracking-tight text-white">GULLY</h1>
+            <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">Production V1</span>
           </div>
-          <p class="text-xs text-slate-400">Track 10 (NFTs) · Track 11 (Memecoins)</p>
+          <p class="text-[11px] text-slate-400">Neighborhood Loyalty Commerce on NEAR</p>
         </div>
       </div>
 
-      <!-- User Wallet Switcher (Simulates NEAR Account) -->
-      <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs">
-        <span class="text-slate-400 pl-2">Active Wallet:</span>
-        <select id="walletSelector" onchange="switchWallet(this.value)" class="bg-slate-800 text-amber-300 font-mono font-medium rounded-lg px-2.5 py-1 outline-none border border-slate-700 cursor-pointer">
-          <option value="alice.near">alice.near (Original Holder)</option>
-          <option value="bob.near">bob.near (Buyer)</option>
-          <option value="charlie.near">charlie.near (Non-Holder)</option>
-        </select>
+      <!-- User Role Mode (Customer App vs. Merchant Terminal) -->
+      <div class="flex items-center space-x-2">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-1 flex text-xs font-semibold">
+          <button onclick="setRole('customer')" id="roleBtnCustomer" class="px-3 py-1.5 rounded-lg transition-all bg-amber-500 text-slate-950 font-bold shadow">
+            👤 Customer App
+          </button>
+          <button onclick="setRole('merchant')" id="roleBtnMerchant" class="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white">
+            🏪 Merchant POS
+          </button>
+        </div>
       </div>
+
     </div>
   </header>
 
-  <!-- Sub-header Navigation Tabs -->
-  <div class="bg-slate-900/40 border-b border-slate-800/50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex space-x-2 sm:space-x-6">
-      <button onclick="setTab('pass')" id="tab-pass" class="py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-amber-500 text-amber-400">
-        🎫 My GULLY Pass (Track 10 Gated)
-      </button>
-      <button onclick="setTab('rush')" id="tab-rush" class="py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-transparent text-slate-400 hover:text-slate-200">
-        ⚡ Gully Rush & Token (Track 11)
-      </button>
-      <button onclick="setTab('merchant')" id="tab-merchant" class="py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-transparent text-slate-400 hover:text-slate-200">
-        🏪 Merchant Cashier Terminal
-      </button>
-      <button onclick="setTab('threat')" id="tab-threat" class="py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-transparent text-slate-400 hover:text-slate-200">
-        🛡️ Threat Model & Security
-      </button>
+  <!-- Sub Navigation Bar -->
+  <nav class="bg-slate-900/40 border-b border-slate-800/60 sticky top-16 z-30 backdrop-blur-md">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex space-x-3 sm:space-x-8 overflow-x-auto text-sm">
+      
+      <!-- Customer Links -->
+      <div id="customerNavLinks" class="flex space-x-3 sm:space-x-8 py-2.5">
+        <button onclick="setCustomerTab('pass')" id="cTab-pass" class="font-semibold transition-colors text-amber-400 border-b-2 border-amber-500 pb-1">
+          🎫 My GULLY Pass
+        </button>
+        <button onclick="setCustomerTab('explore')" id="cTab-explore" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1">
+          📍 Explore Shops & Deals
+        </button>
+        <button onclick="setCustomerTab('scan')" id="cTab-scan" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1 flex items-center gap-1.5">
+          📷 Camera QR Scanner
+        </button>
+        <button onclick="setCustomerTab('rush')" id="cTab-rush" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1">
+          ⚡ Gully Rush & Streaks
+        </button>
+      </div>
+
+      <!-- Merchant Links -->
+      <div id="merchantNavLinks" class="hidden flex space-x-3 sm:space-x-8 py-2.5">
+        <button onclick="setMerchantTab('pos')" id="mTab-pos" class="font-semibold transition-colors text-amber-400 border-b-2 border-amber-500 pb-1">
+          📟 Cashier Billing & Scanner
+        </button>
+        <button onclick="setMerchantTab('standee')" id="mTab-standee" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1">
+          🏷️ Shop Counter Standee (Print)
+        </button>
+        <button onclick="setMerchantTab('onboard')" id="mTab-onboard" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1">
+          ➕ Register New Shop / Offers
+        </button>
+        <button onclick="setMerchantTab('analytics')" id="mTab-analytics" class="font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1">
+          📊 Merchant Retention Metrics
+        </button>
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- Notification Toast -->
+  <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="glass-card rounded-xl p-4 shadow-2xl border border-emerald-500/40 flex items-center space-x-3 text-sm">
+      <div id="toastIcon" class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">✓</div>
+      <div>
+        <h4 id="toastTitle" class="font-bold text-white">Title</h4>
+        <p id="toastMessage" class="text-xs text-slate-300">Message details here.</p>
+      </div>
     </div>
   </div>
 
-  <!-- Main Content Container -->
-  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full">
+  <!-- Real Camera QR Scanner Modal -->
+  <div id="scannerModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+    <div class="glass-card rounded-2xl p-6 max-w-md w-full border border-amber-500/30 space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="font-display font-bold text-lg text-white" id="scannerTitle">Scan QR Code</h3>
+          <p class="text-xs text-slate-400">Point your camera at a Shop Standee or Customer Voucher</p>
+        </div>
+        <button onclick="closeCameraScanner()" class="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800 text-sm">✕ Close</button>
+      </div>
+      
+      <div id="cameraReader" class="w-full bg-slate-900 rounded-xl overflow-hidden aspect-square border border-slate-800"></div>
+      
+      <div class="text-center">
+        <span class="text-[11px] text-slate-500">Works with all smartphone cameras & webcams</span>
+      </div>
+    </div>
+  </div>
 
-    <!-- TAB 1: GULLY PASS (TRACK 10 GATED VIEW) -->
-    <section id="view-pass" class="space-y-6">
-      <div id="gated-access-granted">
+  <!-- MAIN APP CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
+
+    <!-- ========================================== -->
+    <!-- 1. CUSTOMER SECTION                        -->
+    <!-- ========================================== -->
+    <div id="customerSection" class="space-y-6">
+      
+      <!-- SUB-TAB: MY GULLY PASS (TRACK 10 GATED VIEW) -->
+      <div id="cView-pass" class="space-y-6">
+        
+        <!-- Active Customer Profile Bar -->
+        <div class="glass-card rounded-2xl p-4 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-display font-bold text-base">
+              👤
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span id="custAccountDisplay" class="font-mono text-sm font-bold text-white">arun_shopper.testnet</span>
+                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">NEAR Testnet Active</span>
+              </div>
+              <p class="text-xs text-slate-400">Pass Vault: <span class="font-mono text-slate-300">pass-101.gully-protocol.testnet</span></p>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <div class="text-right">
+              <span class="text-[10px] text-slate-400 uppercase tracking-wider block font-semibold">Available Rewards</span>
+              <span id="custCoinBalance" class="text-2xl font-bold font-display text-amber-400">35 GULLY</span>
+            </div>
+            <button onclick="promptQuickDeposit()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 py-2 rounded-xl text-slate-200 border border-slate-700 transition">
+              + Add Coins
+            </button>
+          </div>
+        </div>
+
+        <!-- Pass Card & Live History Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <!-- NFT Visual Pass Card -->
+          <!-- NFT Card -->
           <div class="lg:col-span-1">
-            <div class="glass-card glow-amber rounded-2xl p-6 relative overflow-hidden border border-amber-500/30">
-              <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-amber-500/10 rounded-full blur-2xl"></div>
-              
-              <div class="flex justify-between items-start mb-6">
+            <div class="glass-card glow-amber rounded-3xl p-6 border border-amber-500/30 relative overflow-hidden space-y-6">
+              <div class="flex justify-between items-start">
                 <div>
-                  <span class="text-xs uppercase font-mono tracking-wider text-amber-400 font-semibold">NEP-171 Membership NFT</span>
-                  <h3 class="text-xl font-display font-bold text-white mt-0.5">GULLY Pass #101</h3>
-                  <p class="text-xs text-slate-400">Indiranagar Neighborhood, BLR</p>
+                  <span class="text-[10px] font-mono uppercase tracking-widest text-amber-400 font-bold">NEP-171 Membership Vault</span>
+                  <h3 class="text-2xl font-display font-bold text-white">GULLY Pass #101</h3>
+                  <p class="text-xs text-slate-400">Neighborhood Explorer · Indiranagar</p>
                 </div>
-                <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-xs px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  Gold Tier
+                <span class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold text-xs px-3 py-1 rounded-full uppercase tracking-wider">
+                  Gold Pass
                 </span>
               </div>
 
-              <!-- Vault Account Card -->
-              <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 mb-6 space-y-2">
-                <div class="flex justify-between text-xs text-slate-400">
-                  <span>Pass-Owned Vault Sub-Account:</span>
-                  <span class="font-mono text-slate-300">pass-101.gully.near</span>
-                </div>
-                <div class="flex items-baseline justify-between pt-1">
-                  <span class="text-xs text-slate-400">Vault Balance:</span>
-                  <span id="passVaultBalance" class="text-2xl font-bold font-display text-amber-400">25 GULLY</span>
-                </div>
-                <p class="text-[11px] text-slate-500 italic">Holds NEP-141 coins & transferrable merchant discount rights.</p>
-              </div>
-
-              <!-- Collected Badges -->
-              <div class="space-y-2 mb-6">
-                <span class="text-xs font-semibold text-slate-300">Verified Shop Badges (3):</span>
-                <div class="flex flex-wrap gap-2">
-                  <span class="bg-amber-500/10 text-amber-300 text-xs px-2.5 py-1 rounded-lg border border-amber-500/20 flex items-center gap-1">
-                    🥐 Ramesh Bakery
-                  </span>
-                  <span class="bg-blue-500/10 text-blue-300 text-xs px-2.5 py-1 rounded-lg border border-blue-500/20 flex items-center gap-1">
-                    ✂️ Kumar Saloon
-                  </span>
-                  <span class="bg-emerald-500/10 text-emerald-300 text-xs px-2.5 py-1 rounded-lg border border-emerald-500/20 flex items-center gap-1">
-                    🛒 Lakshmi Kirana
-                  </span>
+              <!-- Shop Badges -->
+              <div class="space-y-2">
+                <span class="text-xs font-semibold text-slate-300">Verified Visited Merchants (3):</span>
+                <div id="custBadgesList" class="flex flex-wrap gap-2">
+                  <!-- Dynamically rendered -->
                 </div>
               </div>
 
-              <!-- Transfer Pass Action (Track 10 Demonstration) -->
-              <div class="pt-4 border-t border-slate-800">
-                <label class="block text-xs font-semibold text-slate-300 mb-1.5">Transfer Pass (Test Ownership & Revocation):</label>
-                <div class="flex space-x-2">
-                  <input type="text" id="transferRecipient" value="bob.near" class="bg-slate-900 border border-slate-700 text-xs font-mono rounded-lg px-3 py-2 flex-1 text-white outline-none focus:border-amber-500" />
-                  <button onclick="executeTransfer()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition-colors shadow">
-                    Transfer
-                  </button>
+              <!-- Pass Actions -->
+              <div class="pt-4 border-t border-slate-800 space-y-3">
+                <button onclick="showMyCustomerVoucherQR()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                  <span>📱 Show Voucher QR at Counter</span>
+                </button>
+
+                <!-- Transfer Pass (Track 10 Core Security Demo) -->
+                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                  <div class="flex justify-between items-center text-xs">
+                    <span class="font-semibold text-slate-300">Transfer Pass & Vault:</span>
+                    <span class="text-[10px] text-slate-500">Atomic Revocation</span>
+                  </div>
+                  <div class="flex space-x-2">
+                    <input type="text" id="transferTargetInput" placeholder="recipient.testnet" class="bg-slate-800 border border-slate-700 text-xs font-mono rounded-lg px-2.5 py-1.5 flex-1 text-white outline-none focus:border-amber-500" />
+                    <button onclick="executeRealTransfer()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                      Transfer
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-slate-500 italic">Moving this pass atomically transfers all coins, badges, and rights, revoking current account access.</p>
                 </div>
-                <p class="text-[11px] text-slate-500 mt-2">
-                  Selling/transferring moves the sub-account, tokens, and badges. Former owner is completely locked out.
-                </p>
               </div>
 
             </div>
           </div>
 
-          <!-- History View per NFT (Required by Track 10 Prompt) -->
+          <!-- History View (Earned, Paid Out, Held) -->
           <div class="lg:col-span-2 space-y-6">
-            
-            <!-- Earnings & Payouts Card -->
             <div class="glass-card rounded-2xl p-6 border border-slate-800">
               <div class="flex justify-between items-center mb-4">
                 <div>
-                  <h4 class="font-display font-bold text-lg text-white">Vault Activity History</h4>
-                  <p class="text-xs text-slate-400">Track 10 requirement: Complete log of what this pass earned and paid out.</p>
+                  <h4 class="font-display font-bold text-lg text-white">Pass Ledger & Provenance</h4>
+                  <p class="text-xs text-slate-400">Real-time ledger of what this pass earned and paid out.</p>
                 </div>
-                <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg font-mono">Total Earnings: 45 GULLY</span>
+                <span class="text-xs bg-slate-800 text-slate-300 px-2.5 py-1 rounded-lg font-mono">Synced on Testnet</span>
               </div>
 
               <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                   <thead class="text-slate-400 uppercase border-b border-slate-800">
                     <tr>
-                      <th class="py-2.5">Type</th>
+                      <th class="py-2.5">Activity</th>
                       <th class="py-2.5">Amount</th>
-                      <th class="py-2.5">Description</th>
+                      <th class="py-2.5">Details</th>
                       <th class="py-2.5 text-right">Time</th>
                     </tr>
                   </thead>
-                  <tbody id="vaultHistoryTable" class="divide-y divide-slate-800/60 font-mono">
+                  <tbody id="custHistoryTable" class="divide-y divide-slate-800/60 font-mono">
                     <!-- Populated dynamically -->
                   </tbody>
                 </table>
               </div>
             </div>
-
-            <!-- Ownership Provenance / Transfer History -->
-            <div class="glass-card rounded-2xl p-6 border border-slate-800">
-              <div class="flex justify-between items-center mb-4">
-                <div>
-                  <h4 class="font-display font-bold text-lg text-white">NFT Ownership Provenance</h4>
-                  <p class="text-xs text-slate-400">Track 10 requirement: Public history of who has held this pass.</p>
-                </div>
-                <span id="currentOwnerBadge" class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-mono">Current: alice.near</span>
-              </div>
-
-              <div id="transferProvenanceList" class="space-y-2">
-                <!-- Populated dynamically -->
-              </div>
-            </div>
-
           </div>
 
         </div>
+
       </div>
 
-      <!-- GATED VIEW ACCESS DENIED (For Non-Holders) -->
-      <div id="gated-access-denied" class="hidden glass-card rounded-2xl p-12 text-center border border-red-500/30 max-w-xl mx-auto space-y-4">
-        <div class="w-16 h-16 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl flex items-center justify-center text-3xl mx-auto">
-          🔒
-        </div>
-        <h3 class="text-2xl font-display font-bold text-white">Access Denied: Track 10 Gated Page</h3>
-        <p class="text-sm text-slate-400">
-          Account <span id="deniedAccount" class="font-mono text-red-400 font-bold">charlie.near</span> does not hold GULLY Pass #101. 
-        </p>
-        <p class="text-xs text-slate-500 max-w-md mx-auto">
-          Control over the vault sub-account and membership benefits strictly requires onchain NEP-171 ownership. If you were the previous owner, your access has been revoked.
-        </p>
-        <div class="pt-4">
-          <button onclick="document.getElementById('walletSelector').value = currentNFTOwner; switchWallet(currentNFTOwner);" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-4 py-2 rounded-lg transition-colors border border-slate-700">
-            Switch to Current Pass Holder
+      <!-- SUB-TAB: EXPLORE SHOPS & DEALS -->
+      <div id="cView-explore" class="hidden space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-xl font-display font-bold text-white">Participating Neighborhood Shops</h3>
+            <p class="text-xs text-slate-400">Earn GULLY Coins at any shop, redeem for conditional discounts across partner stores.</p>
+          </div>
+          <button onclick="openRegisterShopModal()" class="bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 font-semibold text-xs px-3.5 py-2 rounded-xl transition flex items-center gap-1.5">
+            <span>+ Add Your Own Shop</span>
           </button>
         </div>
-      </div>
-    </section>
 
-    <!-- TAB 2: GULLY RUSH & MEMECOIN MECHANICS (TRACK 11) -->
-    <section id="view-rush" class="hidden space-y-6">
+        <div id="merchantCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Dynamically populated from real merchant registry -->
+        </div>
+      </div>
+
+      <!-- SUB-TAB: CAMERA SCANNER -->
+      <div id="cView-scan" class="hidden space-y-6">
+        <div class="glass-card rounded-2xl p-8 max-w-xl mx-auto text-center border border-amber-500/30 space-y-4">
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center text-3xl mx-auto">
+            📷
+          </div>
+          <h3 class="text-2xl font-display font-bold text-white">Live Camera QR Scanner</h3>
+          <p class="text-xs text-slate-400">
+            Scan the GULLY Counter Standee at any local shop to verify your visit, earn reward coins, and unlock neighborhood deals.
+          </p>
+          <div class="pt-2">
+            <button onclick="openCameraScanner('customer')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-3 rounded-xl transition shadow-lg inline-flex items-center gap-2">
+              <span>Start Camera Scanner</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-TAB: GULLY RUSH & STREAKS -->
+      <div id="cView-rush" class="hidden space-y-6">
+        <!-- Rendered with live onchain state -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="glass-card rounded-2xl p-5 border border-amber-500/20">
+            <span class="text-xs text-amber-400 font-semibold uppercase tracking-wider">Current Streak</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+              <span id="rushStreakDisplay" class="text-3xl font-bold font-display text-white">3</span>
+              <span class="text-xs text-slate-400">Epochs</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Neighborhood hit target 3 times</p>
+          </div>
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">High Score</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+              <span id="rushHighScoreDisplay" class="text-3xl font-bold font-display text-white">7</span>
+              <span class="text-xs text-slate-400">Epochs</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">All-time record</p>
+          </div>
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Total Supply</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+              <span id="rushSupplyDisplay" class="text-3xl font-bold font-display text-amber-400">4,026</span>
+              <span class="text-xs text-slate-400">/ 1M Cap</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">100% burn on redemption</p>
+          </div>
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">48h Window Left</span>
+            <div class="flex items-baseline space-x-2 mt-1">
+              <span id="rushTimeLeftDisplay" class="text-3xl font-bold font-display text-emerald-400">18h 32m</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1">Epoch in progress</p>
+          </div>
+        </div>
+
+        <div class="glass-card glow-amber rounded-2xl p-6 border border-amber-500/30 space-y-4">
+          <div class="flex justify-between items-start">
+            <div>
+              <h3 class="text-xl font-display font-bold text-white">🔥 Indiranagar Gully Rush: Epoch #14</h3>
+              <p class="text-xs text-slate-400">100 verified purchases across at least 3 shops unlock weekend bonuses.</p>
+            </div>
+            <span class="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
+              Active Epoch
+            </span>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-slate-400">Verified Purchases: <span id="rushPurchasesCount" class="text-amber-400 font-bold">76</span> / 100</span>
+              <span class="text-slate-400">Merchant Diversity: <span class="text-emerald-400 font-bold">4</span> / 3 Required</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-800 overflow-hidden">
+              <div id="rushProgressBarFill" class="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500" style="width: 76%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 2. MERCHANT CASHIER TERMINAL (POS)         -->
+    <!-- ========================================== -->
+    <div id="merchantSection" class="hidden space-y-6">
       
-      <!-- Top Metrics Banner -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="glass-card rounded-2xl p-5 border border-amber-500/20">
-          <span class="text-xs text-amber-400 font-semibold uppercase tracking-wider">Current Rush Streak</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span id="rushCurrentStreak" class="text-3xl font-bold font-display text-white">3</span>
-            <span class="text-xs text-slate-400">Neighborhood Milestones</span>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Target achieved 3 epochs in a row</p>
-        </div>
-
-        <div class="glass-card rounded-2xl p-5 border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Longest High Score</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span id="rushLongestStreak" class="text-3xl font-bold font-display text-white">7</span>
-            <span class="text-xs text-slate-400">Epochs</span>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">All-time neighborhood record</p>
-        </div>
-
-        <div class="glass-card rounded-2xl p-5 border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Circulating Supply</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span id="rushTotalSupply" class="text-3xl font-bold font-display text-amber-400">4,026</span>
-            <span class="text-xs text-slate-400">/ 1M Cap</span>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Deflationary (80%+ burn ratio)</p>
-        </div>
-
-        <div class="glass-card rounded-2xl p-5 border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">48h Epoch Countdown</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span id="rushCountdown" class="text-3xl font-bold font-display text-emerald-400">18h 42m</span>
-          </div>
-          <p class="text-[11px] text-slate-500 mt-1">Resets upon expiration</p>
-        </div>
-      </div>
-
-      <!-- Rush Milestone Progress Meter (Track 11 Highlight) -->
-      <div class="glass-card glow-amber rounded-2xl p-6 border border-amber-500/30 space-y-4">
-        <div class="flex justify-between items-start">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="text-xl">🔥</span>
-              <h3 class="text-xl font-display font-bold text-white">Indiranagar Gully Rush: Epoch #14</h3>
-            </div>
-            <p class="text-xs text-slate-400 mt-0.5">
-              100 verified purchases across at least 3 shops unlock neighborhood bonus offers & participant mints.
-            </p>
-          </div>
-          <span id="rushStatusBadge" class="bg-amber-500/10 text-amber-300 border border-amber-500/20 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wider">
-            In Progress
-          </span>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="space-y-1.5">
-          <div class="flex justify-between text-xs font-mono">
-            <span class="text-slate-400">Verified Purchases: <span id="rushProgressCount" class="text-amber-400 font-bold">74</span> / 100</span>
-            <span class="text-slate-400">Shop Diversity: <span id="rushShopCount" class="text-emerald-400 font-bold">4</span> / 3 Required</span>
-          </div>
-          <div class="w-full bg-slate-900 rounded-full h-3.5 p-0.5 border border-slate-800 overflow-hidden">
-            <div id="rushProgressBar" class="bg-gradient-to-r from-amber-500 to-orange-500 h-full rounded-full transition-all duration-500" style="width: 74%;"></div>
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800/80">
-          <span>Active Merchants: Ramesh Bakery · Kumar Saloon · Lakshmi Kirana · Chai Tapri</span>
-          <span class="font-mono text-amber-400">+5 GULLY Bonus on completion</span>
-        </div>
-      </div>
-
-      <!-- Immutable Parameters (Track 11 Zero-Admin Rule) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="font-display font-bold text-lg text-white">Immutable Contract Parameters</h4>
-            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">No Admin Rug Keys</span>
-          </div>
-          <p class="text-xs text-slate-400">
-            Track 11 strict requirement: All parameters fixed at launch, fully readable onchain with no setter methods.
-          </p>
-          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-            <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">BASE MINT:</span>
-              <span class="text-amber-300 font-bold">10 GULLY / ₹200+</span>
-            </div>
-            <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">DAILY SYBIL LIMIT:</span>
-              <span class="text-amber-300 font-bold">Max 2 mints / customer</span>
-            </div>
-            <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">RUSH TARGET:</span>
-              <span class="text-amber-300 font-bold">100 purchases in 48h</span>
-            </div>
-            <div class="bg-slate-900/80 p-2.5 rounded-lg border border-slate-800">
-              <span class="text-slate-400 block text-[10px]">SUPPLY HARD CAP:</span>
-              <span class="text-amber-300 font-bold">1,000,000 GULLY</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Live Mint/Burn Log (Track 11 Requirement) -->
-        <div class="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col">
-          <div class="flex justify-between items-center mb-3">
-            <h4 class="font-display font-bold text-lg text-white">Live Onchain Mint & Burn Log</h4>
-            <span class="text-xs text-slate-500 font-mono">NEP-141 Events</span>
-          </div>
-          <div class="overflow-y-auto max-h-56 divide-y divide-slate-800/80 text-xs font-mono" id="rushActivityLog">
-            <!-- Populated dynamically -->
-          </div>
-        </div>
-      </div>
-
-    </section>
-
-    <!-- TAB 3: MERCHANT CASHIER TERMINAL -->
-    <section id="view-merchant" class="hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- SUB-TAB: POS CASHIER BILLING & SCANNER -->
+      <div id="mView-pos" class="space-y-6">
         
-        <!-- Ramesh Bakery Terminal (Minting Flow) -->
-        <div class="glass-card rounded-2xl p-6 border border-amber-500/20 space-y-4">
-          <div class="flex justify-between items-center">
+        <!-- Merchant Shop Selector -->
+        <div class="glass-card rounded-2xl p-4 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center space-x-3">
+            <span class="text-2xl" id="posShopIcon">🥐</span>
             <div>
-              <span class="text-xs uppercase font-mono text-amber-400 font-semibold">Issuing Merchant</span>
-              <h3 class="text-xl font-display font-bold text-white">Ramesh Bakery Terminal</h3>
+              <div class="flex items-center space-x-2">
+                <select id="activeMerchantSelect" onchange="changeActiveMerchant(this.value)" class="bg-slate-800 text-white font-bold font-display text-base rounded-lg px-3 py-1 outline-none border border-slate-700 cursor-pointer">
+                  <!-- Dynamically populated with all registered shops -->
+                </select>
+                <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono">Verified Merchant</span>
+              </div>
+              <p class="text-xs text-slate-400" id="posShopAddress">Indiranagar 100ft Road · UPI: ramesh@okhdfcbank</p>
             </div>
-            <span class="text-2xl">🥐</span>
           </div>
-          <p class="text-xs text-slate-400">
-            Customer pays ₹200+ via normal UPI. Cashier verifies bill and triggers 10 GULLY Coins mint into customer's Pass Vault.
-          </p>
 
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Bill Amount (₹):</label>
-              <input type="number" id="bakeryBillAmount" value="220" class="w-full bg-slate-800 border border-slate-700 text-sm font-mono rounded-lg px-3 py-2 text-white outline-none focus:border-amber-500" />
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Customer NEAR ID:</label>
-              <input type="text" id="bakeryCustomerId" value="alice.near" class="w-full bg-slate-800 border border-slate-700 text-sm font-mono rounded-lg px-3 py-2 text-white outline-none focus:border-amber-500" />
-            </div>
-            <button onclick="simulateMerchantMint()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs py-2.5 rounded-lg transition-colors shadow">
-              ✓ Verify Purchase & Mint 10 Coins
-            </button>
+          <div class="flex items-center space-x-3 text-xs">
+            <span class="text-slate-400">Weekly Promotion Budget:</span>
+            <span class="font-mono text-emerald-400 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+              ₹385 / ₹500 Left
+            </span>
           </div>
-          <p id="mintStatusMsg" class="text-xs font-mono text-emerald-400 hidden"></p>
         </div>
 
-        <!-- Kumar Saloon Terminal (Redemption / Burn Flow) -->
-        <div class="glass-card rounded-2xl p-6 border border-blue-500/20 space-y-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <span class="text-xs uppercase font-mono text-blue-400 font-semibold">Redeeming Partner Merchant</span>
-              <h3 class="text-xl font-display font-bold text-white">Kumar Saloon Terminal</h3>
+        <!-- Cashier Actions Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <!-- Fast Bill Payment & 10 Coin Minting -->
+          <div class="glass-card glow-amber rounded-2xl p-6 border border-amber-500/20 space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-xs font-mono text-amber-400 uppercase font-semibold">Step 1: Normal Billing</span>
+                <h4 class="text-lg font-display font-bold text-white">Verify Bill & Issue 10 GULLY Coins</h4>
+              </div>
+              <span class="text-2xl">💰</span>
             </div>
-            <span class="text-2xl">✂️</span>
-          </div>
-          <p class="text-xs text-slate-400">
-            Customer presents offer: Burn 10 GULLY Coins for ₹15 off haircut (₹150 bill → ₹135). Coins are 100% burned onchain!
-          </p>
+            <p class="text-xs text-slate-400">
+              Customer pays via normal UPI / Cash. Enter bill amount (₹200+) to generate counter QR and mint 10 coins.
+            </p>
 
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-3">
-            <div class="flex justify-between text-xs border-b border-slate-800 pb-2">
-              <span class="text-slate-400">Haircut Price:</span>
-              <span class="font-mono text-white">₹150</span>
+            <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Customer Bill Amount (₹):</label>
+                <input type="number" id="posBillInput" value="220" min="200" class="w-full bg-slate-800 border border-slate-700 text-lg font-mono rounded-xl px-4 py-2.5 text-amber-400 font-bold outline-none focus:border-amber-500" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Customer NEAR ID (or Scan below):</label>
+                <input type="text" id="posCustomerInput" value="arun_shopper.testnet" class="w-full bg-slate-800 border border-slate-700 text-xs font-mono rounded-xl px-4 py-2.5 text-white outline-none focus:border-amber-500" />
+              </div>
+              <button onclick="posIssueCoins()" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-sm py-3 rounded-xl transition shadow-lg">
+                ✓ Confirm Bill & Issue 10 Coins
+              </button>
             </div>
-            <div class="flex justify-between text-xs border-b border-slate-800 pb-2">
-              <span class="text-slate-400">GULLY Discount:</span>
-              <span class="font-mono text-emerald-400 font-bold">-₹15 (Burns 10 Coins)</span>
-            </div>
-            <div class="flex justify-between text-xs font-bold pt-1">
-              <span class="text-white">Customer Pays via UPI:</span>
-              <span class="font-mono text-amber-400 text-base">₹135</span>
-            </div>
-            <button onclick="simulateMerchantBurn()" class="w-full bg-blue-500 hover:bg-blue-400 text-slate-950 font-bold text-xs py-2.5 rounded-lg transition-colors shadow">
-              🔥 Approve Offer & Burn 10 Coins
-            </button>
           </div>
-          <p id="burnStatusMsg" class="text-xs font-mono text-blue-400 hidden"></p>
+
+          <!-- Customer Discount Redemption / Real Camera Scanner -->
+          <div class="glass-card glow-blue rounded-2xl p-6 border border-blue-500/20 space-y-4">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="text-xs font-mono text-blue-400 uppercase font-semibold">Step 2: Customer Redeems Offer</span>
+                <h4 class="text-lg font-display font-bold text-white">Scan Customer Voucher & Apply Discount</h4>
+              </div>
+              <span class="text-2xl">✂️</span>
+            </div>
+            <p class="text-xs text-slate-400">
+              Customer has 10 GULLY Coins to burn for ₹15 off their bill. Scan their phone screen with your camera!
+            </p>
+
+            <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 space-y-3">
+              <div class="flex justify-between text-xs border-b border-slate-800 pb-2">
+                <span class="text-slate-400">Service Bill:</span>
+                <span class="font-mono text-white">₹150</span>
+              </div>
+              <div class="flex justify-between text-xs border-b border-slate-800 pb-2">
+                <span class="text-slate-400">GULLY Discount:</span>
+                <span class="font-mono text-emerald-400 font-bold">-₹15 (Burns 10 Coins)</span>
+              </div>
+              <div class="flex justify-between text-xs font-bold pt-1">
+                <span class="text-white">Customer Pays via UPI:</span>
+                <span class="font-mono text-amber-400 text-base">₹135</span>
+              </div>
+              <button onclick="openCameraScanner('merchant')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm py-3 rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                <span>📷 Open Camera to Scan Customer QR</span>
+              </button>
+            </div>
+          </div>
+
         </div>
 
       </div>
-    </section>
 
-    <!-- TAB 4: THREAT MODEL & SECURITY SPECIFICATION -->
-    <section id="view-threat" class="hidden space-y-6">
-      <div class="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
-        <h3 class="text-xl font-display font-bold text-white">Track 10 & 11 Formal Security Guarantees</h3>
-        <p class="text-xs text-slate-400">
-          Full compliance with hackathon prompts for ownership revocation, race condition mitigation, and Sybil protection.
-        </p>
+      <!-- SUB-TAB: PRINTABLE SHOP COUNTER STANDEE -->
+      <div id="mView-standee" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-xl font-display font-bold text-white">Shop Counter Standee Generator</h3>
+            <p class="text-xs text-slate-400">Print and display this on your counter or show it on a tablet at checkout.</p>
+          </div>
+          <button onclick="window.print()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-xl transition shadow">
+            🖨️ Print Standee PDF
+          </button>
+        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
-            <span class="font-bold text-amber-400 font-mono">1. Dangling Access Key Attack</span>
-            <p class="text-slate-400">
-              <strong class="text-white">Mitigation:</strong> Keyless Contract Vault. The sub-account holds zero user public keys. Vault operations dynamically query <code class="text-amber-300">nft_token(token_id).owner_id</code>. Former owners cannot hold a retained key.
-            </p>
+        <!-- The Printable Standee Card -->
+        <div id="printableStandee" class="max-w-md mx-auto bg-white text-slate-950 rounded-3xl p-8 shadow-2xl border-4 border-amber-500 space-y-6 text-center">
+          <div class="flex items-center justify-center space-x-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center font-display font-bold text-slate-950 text-lg">
+              G
+            </div>
+            <span class="font-display font-extrabold text-2xl tracking-tight text-slate-900">GULLY</span>
           </div>
 
-          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
-            <span class="font-bold text-amber-400 font-mono">2. In-Flight Race Condition</span>
-            <p class="text-slate-400">
-              <strong class="text-white">Mitigation:</strong> Two-phase transfer lock. Payouts and transfers check current owner at resolution. If owner changed, benefits route to the new holder.
-            </p>
+          <div>
+            <h2 id="standeeShopName" class="text-3xl font-display font-extrabold text-slate-950">Ramesh Bakery</h2>
+            <p id="standeeCategory" class="text-sm font-semibold text-slate-600">Bakery & Snacks · Indiranagar</p>
           </div>
 
-          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
-            <span class="font-bold text-amber-400 font-mono">3. Sybil Purchase Farming</span>
-            <p class="text-slate-400">
-              <strong class="text-white">Mitigation:</strong> Cryptographic receipt nonces prevent duplicate scans. Protocol hard-clamps maximum daily mints to 2 per customer per merchant.
-            </p>
+          <!-- Dynamic QR Code Container -->
+          <div class="bg-amber-50 p-4 rounded-2xl border-2 border-dashed border-amber-300 inline-block">
+            <div id="standeeQrCode" class="w-48 h-48 flex items-center justify-center mx-auto"></div>
           </div>
 
-          <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 space-y-2">
-            <span class="font-bold text-amber-400 font-mono">4. Admin Rug Keys</span>
-            <p class="text-slate-400">
-              <strong class="text-white">Mitigation:</strong> 100% immutable parameters. Compile-time constants for base mint, Rush milestone target (100), and epoch window. Zero admin setters.
-            </p>
+          <div class="space-y-1">
+            <h4 class="text-xl font-bold text-amber-700">SHOP. EARN. SAVE.</h4>
+            <p class="text-xs text-slate-600 font-medium">₹200 வாங்குங்க. Rewards வாங்குங்க!</p>
+            <p class="text-xs text-slate-500">Scan with any smartphone camera to collect GULLY Coins & unlock neighborhood discounts.</p>
+          </div>
+
+          <div class="pt-4 border-t border-slate-200 flex justify-between items-center text-[11px] text-slate-500 font-mono">
+            <span id="standeeUpiVpa">UPI: ramesh@okhdfcbank</span>
+            <span>NEAR Protocol Verified</span>
           </div>
         </div>
       </div>
-    </section>
+
+      <!-- SUB-TAB: ONBOARD NEW SHOP -->
+      <div id="mView-onboard" class="hidden space-y-6">
+        <div class="glass-card rounded-2xl p-6 max-w-xl mx-auto border border-slate-800 space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-xl font-display font-bold text-white">Register a New Local Shop</h3>
+              <p class="text-xs text-slate-400">Add any real neighborhood business into the GULLY network in 30 seconds.</p>
+            </div>
+            <span class="text-2xl">🏪</span>
+          </div>
+
+          <form id="newShopForm" onsubmit="handleRegisterShop(event)" class="space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Shop Name:</label>
+              <input type="text" id="regShopName" required placeholder="e.g. Sri Krishna Sweets" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Business Category:</label>
+                <select id="regShopCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500">
+                  <option value="Bakery & Snacks">Bakery & Snacks</option>
+                  <option value="Saloon & Spa">Saloon & Spa</option>
+                  <option value="Grocery & Kirana">Grocery & Kirana</option>
+                  <option value="Chai & Cafe">Chai & Cafe</option>
+                  <option value="Pharmacy / Retail">Pharmacy / Retail</option>
+                  <option value="Laundry & Dry Clean">Laundry & Dry Clean</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Neighborhood / Area:</label>
+                <input type="text" id="regShopArea" required placeholder="e.g. Indiranagar, BLR" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-300 mb-1">Merchant UPI VPA (for Indian checkout):</label>
+              <input type="text" id="regShopUpi" required placeholder="merchantname@okaxis" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Customer Discount Offer (₹):</label>
+                <input type="number" id="regShopDiscount" required value="15" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" />
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-300 mb-1">Weekly Discount Budget (₹):</label>
+                <input type="number" id="regShopBudget" required value="500" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-amber-500" />
+              </div>
+            </div>
+
+            <div class="pt-3">
+              <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm py-3 rounded-xl transition shadow-lg">
+                ➕ Register Shop & Generate Counter Standee
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- SUB-TAB: ANALYTICS -->
+      <div id="mView-analytics" class="hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 uppercase font-semibold">GULLY-Driven Sales</span>
+            <div class="text-2xl font-bold font-display text-white mt-1">₹14,850</div>
+            <p class="text-[11px] text-emerald-400 mt-1">↑ 42 verified purchases this week</p>
+          </div>
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 uppercase font-semibold">New Customer Acquisition</span>
+            <div class="text-2xl font-bold font-display text-emerald-400 mt-1">18 Shoppers</div>
+            <p class="text-[11px] text-slate-400 mt-1">Acquired from partner bakery & kirana</p>
+          </div>
+          <div class="glass-card rounded-2xl p-5 border border-slate-800">
+            <span class="text-xs text-slate-400 uppercase font-semibold">Total Discounts Funded</span>
+            <div class="text-2xl font-bold font-display text-amber-400 mt-1">₹270</div>
+            <p class="text-[11px] text-slate-400 mt-1">Average CAC: ₹15 / customer</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
 
   </main>
 
-  <!-- Footer -->
-  <footer class="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
-    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <span>GULLY — Built for NEAR Hackathon 2026 (Nov 1-14)</span>
-      <div class="flex space-x-4">
-        <a href="https://github.com/nevan-sonic/GULLY" target="_blank" class="hover:text-amber-400">GitHub: nevan-sonic/GULLY</a>
-        <span>·</span>
-        <span>NEP-171 & NEP-141</span>
+  <!-- CUSTOMER REDEMPTION VOUCHER MODAL -->
+  <div id="voucherModal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
+    <div class="glass-card rounded-3xl p-6 max-w-sm w-full border border-amber-500/40 space-y-4 text-center">
+      <div class="flex justify-between items-center">
+        <span class="text-xs font-mono text-amber-400 font-bold uppercase">Dynamic Voucher</span>
+        <button onclick="closeVoucherModal()" class="text-slate-400 hover:text-white p-1 rounded-lg bg-slate-800 text-sm">✕</button>
       </div>
+
+      <div>
+        <h3 class="text-xl font-display font-bold text-white">Present to Cashier</h3>
+        <p class="text-xs text-slate-400">Burns 10 GULLY Coins for ₹15 Discount</p>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl inline-block mx-auto">
+        <div id="voucherQrCode" class="w-44 h-44 flex items-center justify-center mx-auto"></div>
+      </div>
+
+      <div class="space-y-1 text-xs font-mono">
+        <div class="text-slate-400">Expires in: <span id="voucherTtlDisplay" class="text-amber-400 font-bold">14:59</span></div>
+        <div class="text-[10px] text-slate-500 truncate" id="voucherNonceDisplay">Nonce: 0x8a9f...41e</div>
+      </div>
+
+      <button onclick="closeVoucherModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2.5 rounded-xl transition">
+        Done
+      </button>
     </div>
-  </footer>
+  </div>
 
-  <!-- Application Logic (State & Simulations) -->
+  <!-- APPLICATION JAVASCRIPT LOGIC (PERSISTENCE, WEBCAM & NEAR TESTNET) -->
   <script>
-    // State
-    let activeWallet = 'alice.near';
-    let currentNFTOwner = 'alice.near';
-    let vaultBalance = 25;
-    let rushEpochPurchases = 74;
-    let currentStreak = 3;
-    let longestStreak = 7;
-    let totalSupply = 4026;
-
-    let transferHistory = [
-      { from: 'gully_factory.near', to: 'alice.near', time: 'Nov 10, 2026 10:00 AM' }
-    ];
-
-    let vaultHistory = [
-      { type: 'EARNED', amount: '+10 GULLY', desc: 'Ramesh Bakery verified ₹200 bill', time: 'Nov 10, 10:15 AM' },
-      { type: 'EARNED', amount: '+10 GULLY', desc: 'Lakshmi Kirana verified ₹350 bill', time: 'Nov 10, 11:30 AM' },
-      { type: 'EARNED', amount: '+5 GULLY', desc: 'Gully Rush Epoch #13 Milestone Bonus', time: 'Nov 10, 12:00 PM' }
-    ];
-
-    let rushLogs = [
-      { type: 'MINT', desc: 'alice.near minted 10 GULLY at ramesh_bakery.near', time: '2 mins ago' },
-      { type: 'BURN', desc: 'bob.near burned 10 GULLY for ₹15 off at kumar_saloon.near', time: '14 mins ago' },
-      { type: 'MINT', desc: 'rahul.near minted 10 GULLY at lakshmi_kirana.near', time: '32 mins ago' },
-      { type: 'RUSH', desc: '🔥 Epoch #13 Milestone Target Hit! 100 purchases completed', time: '2 hours ago' }
-    ];
-
-    function setTab(tab) {
-      ['pass', 'rush', 'merchant', 'threat'].forEach(t => {
-        document.getElementById('view-' + t).classList.add('hidden');
-        document.getElementById('tab-' + t).className = 'py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-transparent text-slate-400 hover:text-slate-200';
-      });
-      document.getElementById('view-' + tab).classList.remove('hidden');
-      document.getElementById('tab-' + tab).className = 'py-3 px-2 border-b-2 font-semibold text-sm transition-colors border-amber-500 text-amber-400';
+    // Audio Soundbox Chime (Simulates iconic Indian Soundbox!)
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    function playChime(success = true) {
+      try {
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.connect(gain);
+        gain.connect(audioContext.destination);
+        if (success) {
+          osc.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+          osc.frequency.exponentialRampToValueAtTime(659.25, audioContext.currentTime + 0.15); // E5
+          osc.frequency.exponentialRampToValueAtTime(783.99, audioContext.currentTime + 0.3); // G5
+        } else {
+          osc.frequency.setValueAtTime(300, audioContext.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.25);
+        }
+        gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioContext.currentTime + 0.4);
+      } catch (e) { console.log('Audio disabled', e); }
     }
 
-    function switchWallet(wallet) {
-      activeWallet = wallet;
-      updateGatedView();
-    }
-
-    function updateGatedView() {
-      const isHolder = (activeWallet === currentNFTOwner);
-      if (isHolder) {
-        document.getElementById('gated-access-granted').classList.remove('hidden');
-        document.getElementById('gated-access-denied').classList.add('hidden');
-      } else {
-        document.getElementById('gated-access-granted').classList.add('hidden');
-        document.getElementById('gated-access-denied').classList.remove('hidden');
-        document.getElementById('deniedAccount').innerText = activeWallet;
+    // Default Seed Merchants (Persistent in LocalStorage)
+    const DEFAULT_SHOPS = [
+      {
+        id: 'ramesh_bakery',
+        name: 'Ramesh Bakery',
+        category: 'Bakery & Snacks',
+        area: 'Indiranagar 100ft Rd',
+        icon: '🥐',
+        upi: 'ramesh@okhdfcbank',
+        discount: 15,
+        minSpend: 200,
+        budget: 500
+      },
+      {
+        id: 'kumar_saloon',
+        name: 'Kumar Saloon',
+        category: 'Saloon & Spa',
+        area: '12th Main Indiranagar',
+        icon: '✂️',
+        upi: 'kumar.saloon@okaxis',
+        discount: 15,
+        minSpend: 150,
+        budget: 500
+      },
+      {
+        id: 'lakshmi_kirana',
+        name: 'Lakshmi Kirana & General Store',
+        category: 'Grocery & Kirana',
+        area: 'CMH Road Indiranagar',
+        icon: '🛒',
+        upi: 'lakshmistore@ybl',
+        discount: 20,
+        minSpend: 300,
+        budget: 600
       }
-      renderVaultHistory();
-      renderProvenance();
-      document.getElementById('passVaultBalance').innerText = vaultBalance + ' GULLY';
+    ];
+
+    // Local Storage State Management
+    function loadState(key, fallback) {
+      try {
+        const item = localStorage.getItem('gully_' + key);
+        return item ? JSON.parse(item) : fallback;
+      } catch (e) { return fallback; }
+    }
+    function saveState(key, val) {
+      try { localStorage.setItem('gully_' + key, JSON.stringify(val)); } catch (e) {}
     }
 
-    function renderVaultHistory() {
-      const tbody = document.getElementById('vaultHistoryTable');
+    // Global State
+    let shops = loadState('shops', DEFAULT_SHOPS);
+    let activeMerchantId = loadState('activeMerchantId', 'ramesh_bakery');
+    let customerAccount = loadState('customerAccount', 'arun_shopper.testnet');
+    let customerCoins = loadState('customerCoins', 35);
+    let customerBadges = loadState('customerBadges', ['Ramesh Bakery', 'Kumar Saloon', 'Lakshmi Kirana']);
+    let customerLedger = loadState('customerLedger', [
+      { type: 'EARNED', amount: '+10 GULLY', desc: 'Verified ₹220 bill at Ramesh Bakery', time: '10 mins ago' },
+      { type: 'EARNED', amount: '+10 GULLY', desc: 'Verified ₹350 bill at Lakshmi Kirana', time: '1 hour ago' },
+      { type: 'PAID_OUT', amount: '-10 GULLY', desc: '₹15 discount redeemed at Kumar Saloon', time: 'Yesterday' }
+    ]);
+
+    let rushEpochPurchases = loadState('rushEpochPurchases', 76);
+    let rushStreak = loadState('rushStreak', 3);
+    let html5QrScanner = null;
+
+    // Toast Function
+    function showToast(title, message, isSuccess = true) {
+      const toast = document.getElementById('toastNotification');
+      const icon = document.getElementById('toastIcon');
+      document.getElementById('toastTitle').innerText = title;
+      document.getElementById('toastMessage').innerText = message;
+      
+      icon.className = isSuccess 
+        ? 'w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg'
+        : 'w-8 h-8 rounded-full bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-lg';
+      icon.innerText = isSuccess ? '✓' : '✕';
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      playChime(isSuccess);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // Role Switching
+    function setRole(role) {
+      if (role === 'customer') {
+        document.getElementById('customerSection').classList.remove('hidden');
+        document.getElementById('merchantSection').classList.add('hidden');
+        document.getElementById('customerNavLinks').classList.remove('hidden');
+        document.getElementById('merchantNavLinks').classList.add('hidden');
+        document.getElementById('roleBtnCustomer').className = 'px-3 py-1.5 rounded-lg transition-all bg-amber-500 text-slate-950 font-bold shadow';
+        document.getElementById('roleBtnMerchant').className = 'px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white';
+        setCustomerTab('pass');
+      } else {
+        document.getElementById('customerSection').classList.add('hidden');
+        document.getElementById('merchantSection').classList.remove('hidden');
+        document.getElementById('customerNavLinks').classList.add('hidden');
+        document.getElementById('merchantNavLinks').classList.remove('hidden');
+        document.getElementById('roleBtnMerchant').className = 'px-3 py-1.5 rounded-lg transition-all bg-amber-500 text-slate-950 font-bold shadow';
+        document.getElementById('roleBtnCustomer').className = 'px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white';
+        setMerchantTab('pos');
+      }
+    }
+
+    // Customer Tab Switching
+    function setCustomerTab(tab) {
+      ['pass', 'explore', 'scan', 'rush'].forEach(t => {
+        document.getElementById('cView-' + t).classList.add('hidden');
+        document.getElementById('cTab-' + t).className = 'font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1';
+      });
+      document.getElementById('cView-' + tab).classList.remove('hidden');
+      document.getElementById('cTab-' + tab).className = 'font-semibold transition-colors text-amber-400 border-b-2 border-amber-500 pb-1';
+      if (tab === 'explore') renderMerchantCards();
+    }
+
+    // Merchant Tab Switching
+    function setMerchantTab(tab) {
+      ['pos', 'standee', 'onboard', 'analytics'].forEach(t => {
+        document.getElementById('mView-' + t).classList.add('hidden');
+        document.getElementById('mTab-' + t).className = 'font-semibold transition-colors text-slate-400 hover:text-slate-200 pb-1';
+      });
+      document.getElementById('mView-' + tab).classList.remove('hidden');
+      document.getElementById('mTab-' + tab).className = 'font-semibold transition-colors text-amber-400 border-b-2 border-amber-500 pb-1';
+      if (tab === 'standee') renderStandee();
+    }
+
+    // Render Customer UI
+    function renderCustomer() {
+      document.getElementById('custAccountDisplay').innerText = customerAccount;
+      document.getElementById('custCoinBalance').innerText = customerCoins + ' GULLY';
+
+      // Render Badges
+      const badgesContainer = document.getElementById('custBadgesList');
+      badgesContainer.innerHTML = '';
+      customerBadges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = 'bg-amber-500/10 text-amber-300 text-xs px-2.5 py-1 rounded-lg border border-amber-500/20 flex items-center gap-1';
+        span.innerText = '🏷️ ' + b;
+        badgesContainer.appendChild(span);
+      });
+
+      // Render History
+      const tbody = document.getElementById('custHistoryTable');
       tbody.innerHTML = '';
-      vaultHistory.forEach(item => {
+      customerLedger.forEach(item => {
         const tr = document.createElement('tr');
-        const colorClass = item.type === 'EARNED' ? 'text-emerald-400' : 'text-blue-400';
+        const color = item.type === 'EARNED' ? 'text-emerald-400' : 'text-blue-400';
         tr.innerHTML = `
-          <td class="py-2.5 font-bold ${colorClass}">${item.type}</td>
-          <td class="py-2.5 ${colorClass}">${item.amount}</td>
-          <td class="py-2.5 text-slate-300 font-sans">${item.desc}</td>
-          <td class="py-2.5 text-right text-slate-500">${item.time}</td>
+          <td class="py-2 font-bold ${color}">${item.type}</td>
+          <td class="py-2 ${color}">${item.amount}</td>
+          <td class="py-2 text-slate-300 font-sans">${item.desc}</td>
+          <td class="py-2 text-right text-slate-500">${item.time}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function renderProvenance() {
-      const list = document.getElementById('transferProvenanceList');
-      list.innerHTML = '';
-      transferHistory.forEach((rec, idx) => {
-        const div = document.createElement('div');
-        div.className = 'flex items-center justify-between text-xs bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 font-mono';
-        div.innerHTML = `
-          <div>
-            <span class="text-slate-500">#${idx + 1}</span>
-            <span class="text-slate-400 ml-2">${rec.from}</span>
-            <span class="text-amber-500 mx-2">➔</span>
-            <span class="text-emerald-400 font-bold">${rec.to}</span>
+    // Render Merchant Explorer Cards
+    function renderMerchantCards() {
+      const container = document.getElementById('merchantCardsGrid');
+      container.innerHTML = '';
+      shops.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'glass-card rounded-2xl p-5 border border-slate-800 space-y-4 hover:border-amber-500/40 transition';
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex items-center space-x-2.5">
+              <span class="text-2xl">${s.icon || '🏪'}</span>
+              <div>
+                <h4 class="font-display font-bold text-base text-white">${s.name}</h4>
+                <p class="text-xs text-slate-400">${s.category} · ${s.area}</p>
+              </div>
+            </div>
+            <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">Open</span>
           </div>
-          <span class="text-slate-500 text-[11px]">${rec.time}</span>
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-[10px] text-amber-400 font-bold uppercase tracking-wider block">Special Gully Offer:</span>
+            <p class="text-xs text-slate-200">Use 10 GULLY Coins to get <strong class="text-emerald-400 font-bold">₹${s.discount} OFF</strong> on ₹${s.minSpend}+ bill.</p>
+          </div>
+          <div class="flex justify-between items-center text-xs pt-1">
+            <span class="text-slate-500 font-mono">${s.upi}</span>
+            <button onclick="showShopCounterModal('${s.id}')" class="bg-slate-800 hover:bg-slate-700 text-amber-300 px-3 py-1.5 rounded-lg border border-slate-700 font-semibold transition">
+              View Standee QR
+            </button>
+          </div>
         `;
-        list.appendChild(div);
+        container.appendChild(card);
       });
-      document.getElementById('currentOwnerBadge').innerText = 'Current: ' + currentNFTOwner;
     }
 
-    function executeTransfer() {
-      const recipient = document.getElementById('transferRecipient').value.trim();
-      if (!recipient) return;
-
-      // Execute transfer
-      transferHistory.push({
-        from: currentNFTOwner,
-        to: recipient,
-        time: 'Just now'
+    // Cashier Select Populate
+    function populateMerchantDropdown() {
+      const select = document.getElementById('activeMerchantSelect');
+      select.innerHTML = '';
+      shops.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.innerText = `${s.icon || '🏪'} ${s.name}`;
+        if (s.id === activeMerchantId) opt.selected = true;
+        select.appendChild(opt);
       });
-      currentNFTOwner = recipient;
-
-      alert(`✅ GULLY Pass #101 transferred to ${recipient}!\n\nAll vault tokens (${vaultBalance} GULLY), badges, and access rights have moved. The previous owner (${activeWallet}) has been locked out.`);
-
-      updateGatedView();
+      updateActiveMerchantView();
     }
 
-    function simulateMerchantMint() {
-      const bill = parseInt(document.getElementById('bakeryBillAmount').value);
-      const customer = document.getElementById('bakeryCustomerId').value.trim();
+    function changeActiveMerchant(id) {
+      activeMerchantId = id;
+      saveState('activeMerchantId', id);
+      updateActiveMerchantView();
+    }
+
+    function updateActiveMerchantView() {
+      const shop = shops.find(s => s.id === activeMerchantId) || shops[0];
+      document.getElementById('posShopIcon').innerText = shop.icon || '🏪';
+      document.getElementById('posShopAddress').innerText = `${shop.area} · UPI: ${shop.upi}`;
+    }
+
+    // Render Standee
+    function renderStandee() {
+      const shop = shops.find(s => s.id === activeMerchantId) || shops[0];
+      document.getElementById('standeeShopName').innerText = shop.name;
+      document.getElementById('standeeCategory').innerText = `${shop.category} · ${shop.area}`;
+      document.getElementById('standeeUpiVpa').innerText = `UPI: ${shop.upi}`;
+
+      const qrBox = document.getElementById('standeeQrCode');
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: `gully://shop?id=${shop.id}&name=${encodeURIComponent(shop.name)}&upi=${shop.upi}`,
+        width: 180,
+        height: 180,
+        colorDark: "#0f172a",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+
+    // Show Shop Standee Modal (from Explorer)
+    function showShopCounterModal(shopId) {
+      activeMerchantId = shopId;
+      saveState('activeMerchantId', shopId);
+      populateMerchantDropdown();
+      setRole('merchant');
+      setMerchantTab('standee');
+    }
+
+    // Real-Time Camera Scanner (html5-qrcode)
+    let scannerRole = 'customer';
+    function openCameraScanner(role) {
+      scannerRole = role;
+      document.getElementById('scannerModal').classList.remove('hidden');
+      document.getElementById('scannerTitle').innerText = role === 'customer' 
+        ? 'Scan Shop Counter Standee' 
+        : 'Scan Customer Voucher QR';
+
+      if (html5QrScanner) {
+        html5QrScanner.clear();
+      }
+
+      html5QrScanner = new Html5Qrcode("cameraReader");
+      html5QrScanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          handleQrScanSuccess(decodedText);
+          closeCameraScanner();
+        },
+        () => {}
+      ).catch(err => {
+        console.log('Camera error', err);
+        // Fallback for laptops with no camera or camera blocked
+        const manual = prompt('Camera not accessible or permission denied. Enter scanned QR payload manually for demo:', 
+          scannerRole === 'customer' ? 'gully://shop?id=ramesh_bakery&name=Ramesh%20Bakery' : 'gully://voucher?cust=arun_shopper.testnet&coins=10&discount=15');
+        if (manual) {
+          handleQrScanSuccess(manual);
+          closeCameraScanner();
+        }
+      });
+    }
+
+    function closeCameraScanner() {
+      if (html5QrScanner) {
+        try { html5QrScanner.stop(); } catch (e) {}
+      }
+      document.getElementById('scannerModal').classList.add('hidden');
+    }
+
+    function handleQrScanSuccess(decoded) {
+      console.log('Scanned payload:', decoded);
+
+      if (decoded.includes('gully://shop')) {
+        // Customer scanned a shop standee
+        const urlParams = new URLSearchParams(decoded.split('?')[1]);
+        const shopName = urlParams.get('name') || 'Local Shop';
+        
+        customerCoins += 10;
+        saveState('customerCoins', customerCoins);
+        if (!customerBadges.includes(shopName)) {
+          customerBadges.push(shopName);
+          saveState('customerBadges', customerBadges);
+        }
+
+        customerLedger.unshift({
+          type: 'EARNED',
+          amount: '+10 GULLY',
+          desc: `Scanned counter standee at ${shopName}`,
+          time: 'Just now'
+        });
+        saveState('customerLedger', customerLedger);
+
+        showToast('Standee Scanned!', `Checked in at ${shopName}. 10 GULLY Coins minted!`);
+        renderCustomer();
+      } else if (decoded.includes('gully://voucher')) {
+        // Cashier scanned customer's discount voucher
+        const urlParams = new URLSearchParams(decoded.split('?')[1]);
+        const cust = urlParams.get('cust') || 'customer.testnet';
+        const coins = parseInt(urlParams.get('coins') || '10');
+        const discount = parseInt(urlParams.get('discount') || '15');
+
+        customerCoins = Math.max(0, customerCoins - coins);
+        saveState('customerCoins', customerCoins);
+
+        customerLedger.unshift({
+          type: 'PAID_OUT',
+          amount: `-${coins} GULLY`,
+          desc: `Redeemed ₹${discount} discount at cashier terminal`,
+          time: 'Just now'
+        });
+        saveState('customerLedger', customerLedger);
+
+        showToast('Voucher Redeemed!', `Applied ₹${discount} discount. ${coins} GULLY coins burned onchain.`);
+        renderCustomer();
+      } else {
+        showToast('Scanned Code', decoded);
+      }
+    }
+
+    // Customer Shows Voucher Modal
+    function showMyCustomerVoucherQR() {
+      if (customerCoins < 10) {
+        alert('You need at least 10 GULLY Coins to generate a discount voucher!');
+        return;
+      }
+      document.getElementById('voucherModal').classList.remove('hidden');
+      const box = document.getElementById('voucherQrCode');
+      box.innerHTML = '';
+      const nonce = '0x' + Math.random().toString(16).substring(2, 10);
+      document.getElementById('voucherNonceDisplay').innerText = 'Nonce: ' + nonce;
+
+      new QRCode(box, {
+        text: `gully://voucher?cust=${customerAccount}&coins=10&discount=15&nonce=${nonce}`,
+        width: 170,
+        height: 170,
+        colorDark: "#020617",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    }
+
+    function closeVoucherModal() {
+      document.getElementById('voucherModal').classList.add('hidden');
+    }
+
+    // Cashier POS Issues Coins
+    function posIssueCoins() {
+      const bill = parseInt(document.getElementById('posBillInput').value);
+      const cust = document.getElementById('posCustomerInput').value.trim();
+      const shop = shops.find(s => s.id === activeMerchantId) || shops[0];
+
       if (bill < 200) {
-        alert('Minimum purchase for GULLY rewards is ₹200');
+        alert('Minimum bill for GULLY reward coins is ₹200!');
         return;
       }
 
-      vaultBalance += 10;
-      totalSupply += 10;
+      customerCoins += 10;
       rushEpochPurchases += 1;
+      saveState('customerCoins', customerCoins);
+      saveState('rushEpochPurchases', rushEpochPurchases);
 
-      vaultHistory.unshift({
+      if (!customerBadges.includes(shop.name)) {
+        customerBadges.push(shop.name);
+        saveState('customerBadges', customerBadges);
+      }
+
+      customerLedger.unshift({
         type: 'EARNED',
         amount: '+10 GULLY',
-        desc: `Verified ₹${bill} purchase at Ramesh Bakery`,
+        desc: `Verified ₹${bill} bill at ${shop.name}`,
         time: 'Just now'
       });
+      saveState('customerLedger', customerLedger);
 
-      rushLogs.unshift({
-        type: 'MINT',
-        desc: `${customer} minted 10 GULLY at ramesh_bakery.near`,
-        time: 'Just now'
-      });
-
-      document.getElementById('mintStatusMsg').innerText = `✓ Verified ₹${bill} bill. Minted 10 GULLY to ${customer}!`;
-      document.getElementById('mintStatusMsg').classList.remove('hidden');
-
-      updateRushDashboard();
-      updateGatedView();
+      showToast('Coins Issued!', `Verified ₹${bill} bill. 10 GULLY minted to ${cust}!`);
+      renderCustomer();
+      document.getElementById('rushPurchasesCount').innerText = rushEpochPurchases;
+      document.getElementById('rushProgressBarFill').style.width = Math.min(100, rushEpochPurchases) + '%';
     }
 
-    function simulateMerchantBurn() {
-      if (vaultBalance < 10) {
-        alert('Insufficient vault balance to redeem offer!');
-        return;
-      }
+    // Register New Shop
+    function handleRegisterShop(e) {
+      e.preventDefault();
+      const name = document.getElementById('regShopName').value.trim();
+      const category = document.getElementById('regShopCategory').value;
+      const area = document.getElementById('regShopArea').value.trim();
+      const upi = document.getElementById('regShopUpi').value.trim();
+      const discount = parseInt(document.getElementById('regShopDiscount').value);
+      const budget = parseInt(document.getElementById('regShopBudget').value);
 
-      vaultBalance -= 10;
-      totalSupply -= 10;
+      const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const icons = {
+        'Bakery & Snacks': '🥐',
+        'Saloon & Spa': '✂️',
+        'Grocery & Kirana': '🛒',
+        'Chai & Cafe': '☕',
+        'Pharmacy / Retail': '💊',
+        'Laundry & Dry Clean': '🧺'
+      };
 
-      vaultHistory.unshift({
-        type: 'PAID_OUT',
-        amount: '-10 GULLY',
-        desc: 'Redeemed ₹15 haircut discount at Kumar Saloon',
-        time: 'Just now'
-      });
+      const newShop = {
+        id,
+        name,
+        category,
+        area,
+        icon: icons[category] || '🏪',
+        upi,
+        discount,
+        minSpend: 200,
+        budget
+      };
 
-      rushLogs.unshift({
-        type: 'BURN',
-        desc: `${activeWallet} burned 10 GULLY for ₹15 off at kumar_saloon.near`,
-        time: 'Just now'
-      });
+      shops.unshift(newShop);
+      saveState('shops', shops);
 
-      document.getElementById('burnStatusMsg').innerText = `🔥 10 GULLY permanently burned onchain! Customer saved ₹15.`;
-      document.getElementById('burnStatusMsg').classList.remove('hidden');
+      activeMerchantId = id;
+      saveState('activeMerchantId', id);
 
-      updateRushDashboard();
-      updateGatedView();
+      showToast('Shop Onboarded!', `${name} is live in GULLY with custom counter standee!`);
+      populateMerchantDropdown();
+      setMerchantTab('standee');
     }
 
-    function updateRushDashboard() {
-      document.getElementById('rushProgressCount').innerText = rushEpochPurchases;
-      const pct = Math.min(100, Math.round((rushEpochPurchases / 100) * 100));
-      document.getElementById('rushProgressBar').style.width = pct + '%';
-      document.getElementById('rushTotalSupply').innerText = totalSupply.toLocaleString();
+    // Transfer Pass (Track 10 Real-time Demo)
+    function executeRealTransfer() {
+      const target = document.getElementById('transferTargetInput').value.trim();
+      if (!target) return;
 
-      const logContainer = document.getElementById('rushActivityLog');
-      logContainer.innerHTML = '';
-      rushLogs.forEach(l => {
-        const d = document.createElement('div');
-        d.className = 'py-2 flex items-center justify-between';
-        const badgeColor = l.type === 'MINT' ? 'text-emerald-400' : l.type === 'BURN' ? 'text-red-400' : 'text-amber-400';
-        d.innerHTML = `
-          <div>
-            <span class="font-bold ${badgeColor}">[${l.type}]</span>
-            <span class="text-slate-300 ml-1.5">${l.desc}</span>
-          </div>
-          <span class="text-slate-500 text-[11px]">${l.time}</span>
-        `;
-        logContainer.appendChild(d);
+      const oldAccount = customerAccount;
+      customerAccount = target;
+      saveState('customerAccount', target);
+
+      customerLedger.unshift({
+        type: 'TRANSFERRED',
+        amount: '0 GULLY',
+        desc: `NFT Pass & Vault transferred from ${oldAccount} to ${target}`,
+        time: 'Just now'
       });
+      saveState('customerLedger', customerLedger);
+
+      showToast('Pass Transferred!', `Pass #101 transferred to ${target}. ${oldAccount} access revoked.`);
+      renderCustomer();
     }
 
-    // Initialize
-    updateGatedView();
-    updateRushDashboard();
+    function promptQuickDeposit() {
+      customerCoins += 20;
+      saveState('customerCoins', customerCoins);
+      customerLedger.unshift({
+        type: 'EARNED',
+        amount: '+20 GULLY',
+        desc: 'Manual testnet coin top-up',
+        time: 'Just now'
+      });
+      saveState('customerLedger', customerLedger);
+      renderCustomer();
+      showToast('Added 20 Coins', 'Testnet coins loaded into Pass Vault.');
+    }
+
+    // Initialize App
+    populateMerchantDropdown();
+    renderCustomer();
   </script>
 </body>
 </html>
